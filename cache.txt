@@ -1,0 +1,13 @@
+<?php
+define( 'WP_USE_THEMES', false );
+require( './wp-load.php' );
+
+if ( defined( 'LSCWP_V' ) ) {
+    echo "Plugin LiteSpeed Cache terdeteksi. Versi: " . LSCWP_V . "\n";
+    do_action( 'litespeed_purge_all' );
+    echo "Perintah purge all telah dijalankan!\n";
+} else {
+    echo "Plugin LiteSpeed Cache TIDAK terdeteksi.\n";
+    echo "Cek apakah plugin benar-benar aktif.\n";
+}
+echo "Selesai.\n";
